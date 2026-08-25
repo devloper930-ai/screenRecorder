@@ -1,1359 +1,406 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Screen Recorder</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b0d14">
+  <title>ScreenFlow Recorder</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    :root {
-      --bg: #08090d;
-      --card: #11131a;
-      --card-2: #171a23;
-      --border: rgba(255,255,255,.09);
-      --text: #f5f7fb;
-      --muted: #9298a8;
-      --primary: #7c5cff;
-      --primary-hover: #6947f5;
-      --danger: #ff4d67;
-      --success: #35d07f;
-      --warning: #ffb547;
-    }
-
-    body {
-      min-height: 100vh;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-        "Segoe UI", sans-serif;
-      background:
-        radial-gradient(circle at 20% 0%, rgba(124,92,255,.18), transparent 30%),
-        radial-gradient(circle at 90% 20%, rgba(53,208,127,.08), transparent 25%),
-        var(--bg);
-      color: var(--text);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 24px;
-    }
-
-    .app {
-      width: min(1050px, 100%);
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 22px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo {
-      width: 44px;
-      height: 44px;
-      border-radius: 13px;
-      display: grid;
-      place-items: center;
-      background: var(--primary);
-      box-shadow: 0 10px 30px rgba(124,92,255,.3);
-      font-size: 21px;
-    }
-
-    .brand h1 {
-      font-size: 21px;
-      letter-spacing: -.4px;
-    }
-
-    .brand p {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 2px;
-    }
-
-    .status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 9px 13px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      background: rgba(255,255,255,.035);
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--muted);
-    }
-
-    .status.recording {
-      color: #ff8194;
-    }
-
-    .status.recording .status-dot {
-      background: var(--danger);
-      box-shadow: 0 0 0 5px rgba(255,77,103,.12);
-      animation: pulse 1.2s infinite;
-    }
-
-    @keyframes pulse {
-      50% { opacity: .45; }
-    }
-
-    .main {
-      display: grid;
-      grid-template-columns: 1.5fr .8fr;
-      gap: 18px;
-    }
-
-    .card {
-      background: rgba(17,19,26,.9);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,.28);
-    }
-
-    .preview-card {
-      min-height: 480px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .preview {
-      position: relative;
-      flex: 1;
-      min-height: 390px;
-      background: #050608;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    video {
-      width: 100%;
-      height: 100%;
-      max-height: 520px;
-      object-fit: contain;
-      display: none;
-    }
-
-    .preview-empty {
-      text-align: center;
-      color: var(--muted);
-      padding: 30px;
-    }
-
-    .preview-icon {
-      width: 68px;
-      height: 68px;
-      border-radius: 20px;
-      background: var(--card-2);
-      border: 1px solid var(--border);
-      display: grid;
-      place-items: center;
-      font-size: 28px;
-      margin: 0 auto 15px;
-    }
-
-    .preview-empty h2 {
-      color: var(--text);
-      font-size: 18px;
-      margin-bottom: 7px;
-    }
-
-    .preview-empty p {
-      font-size: 13px;
-      line-height: 1.6;
-      max-width: 360px;
-    }
-
-    .preview-bottom {
-      padding: 15px 18px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .timer {
-      font-variant-numeric: tabular-nums;
-      font-size: 25px;
-      font-weight: 700;
-      letter-spacing: 1px;
-    }
-
-    .recording-info {
-      color: var(--muted);
-      font-size: 12px;
-      text-align: right;
-    }
-
-    .settings {
-      padding: 20px;
-    }
-
-    .settings h2 {
-      font-size: 16px;
-      margin-bottom: 18px;
-    }
-
-    .setting {
-      padding: 15px 0;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .setting:last-child {
-      border-bottom: 0;
-    }
-
-    .setting-title {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .setting-title strong {
-      font-size: 13px;
-    }
-
-    .setting-desc {
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.5;
-      margin-top: 5px;
-    }
-
-    select {
-      width: 100%;
-      margin-top: 10px;
-      padding: 11px 12px;
-      background: var(--card-2);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      outline: none;
-      cursor: pointer;
-    }
-
-    .toggle {
-      position: relative;
-      width: 42px;
-      height: 23px;
-      flex-shrink: 0;
-    }
-
-    .toggle input {
-      display: none;
-    }
-
-    .slider {
-      position: absolute;
-      inset: 0;
-      border-radius: 50px;
-      background: #2b2e38;
-      cursor: pointer;
-      transition: .2s;
-    }
-
-    .slider::before {
-      content: "";
-      position: absolute;
-      width: 17px;
-      height: 17px;
-      left: 3px;
-      top: 3px;
-      background: white;
-      border-radius: 50%;
-      transition: .2s;
-    }
-
-    .toggle input:checked + .slider {
-      background: var(--primary);
-    }
-
-    .toggle input:checked + .slider::before {
-      transform: translateX(19px);
-    }
-
-    .controls {
-      grid-column: 1 / -1;
-      padding: 18px;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    button {
-      border: 0;
-      outline: 0;
-      cursor: pointer;
-      color: white;
-      font-weight: 600;
-      font-size: 13px;
-      border-radius: 11px;
-      padding: 12px 18px;
-      transition: .2s;
-    }
-
-    button:hover:not(:disabled) {
-      transform: translateY(-1px);
-    }
-
-    button:disabled {
-      opacity: .4;
-      cursor: not-allowed;
-    }
-
-    .start {
-      background: var(--primary);
-      box-shadow: 0 8px 25px rgba(124,92,255,.25);
-    }
-
-    .start:hover:not(:disabled) {
-      background: var(--primary-hover);
-    }
-
-    .pause {
-      background: #2b2e38;
-    }
-
-    .stop {
-      background: var(--danger);
-    }
-
-    .download {
-      background: var(--success);
-      color: #07140d;
-    }
-
-    .reset {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-    }
-
-    .message {
-      position: fixed;
-      left: 50%;
-      bottom: 25px;
-      transform: translate(-50%, 20px);
-      background: #1b1e27;
-      border: 1px solid var(--border);
-      padding: 12px 17px;
-      border-radius: 12px;
-      color: white;
-      font-size: 13px;
-      opacity: 0;
-      pointer-events: none;
-      transition: .25s;
-      z-index: 100;
-    }
-
-    .message.show {
-      opacity: 1;
-      transform: translate(-50%, 0);
-    }
-
-    .message.error {
-      border-color: rgba(255,77,103,.4);
-    }
-
-    .message.success {
-      border-color: rgba(53,208,127,.4);
-    }
-
-    footer {
-      text-align: center;
-      color: #686d7c;
-      font-size: 11px;
-      margin-top: 15px;
-    }
-
-    @media (max-width: 800px) {
-      body {
-        padding: 14px;
-        align-items: flex-start;
-      }
-
-      header {
-        margin-top: 10px;
-      }
-
-      .main {
-        grid-template-columns: 1fr;
-      }
-
-      .preview-card {
-        min-height: 400px;
-      }
-
-      .preview {
-        min-height: 300px;
-      }
-
-      .controls {
-        grid-column: auto;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <div class="app">
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
 
-    <header>
+  <main class="app-shell">
+
+    <!-- HEADER -->
+    <header class="topbar">
+
       <div class="brand">
-        <div class="logo">◉</div>
+        <div class="brand-mark">
+          <span></span>
+        </div>
+
         <div>
-          <h1>Screen Recorder</h1>
-          <p>Simple • Private • Browser Based</p>
+          <h1>ScreenFlow</h1>
+          <p>Private browser screen recorder</p>
         </div>
       </div>
 
-      <div class="status" id="status">
-        <span class="status-dot"></span>
+      <div class="live-status" id="status">
+        <i></i>
         <span id="statusText">Ready</span>
       </div>
+
     </header>
 
-    <div class="main">
 
-      <!-- Preview -->
-      <section class="card preview-card">
+    <!-- MAIN GRID -->
+    <section class="hero-grid">
 
-        <div class="preview">
+      <!-- PREVIEW -->
+      <section class="preview-card glass">
 
-          <div class="preview-empty" id="emptyState">
-            <div class="preview-icon">▣</div>
-            <h2>Your screen preview</h2>
-            <p>
-              Click Start Recording and choose the screen,
-              window, or browser tab you want to capture.
-            </p>
+        <div class="preview-toolbar">
+
+          <div>
+            <span class="eyebrow">PREVIEW</span>
+            <h2>Your recording workspace</h2>
           </div>
 
-          <video id="previewVideo" autoplay muted playsinline></video>
+          <div class="format-pill">
+            <b>MP4</b>
+            <span>export</span>
+          </div>
 
         </div>
 
-        <div class="preview-bottom">
-          <div class="timer" id="timer">00:00:00</div>
 
-          <div class="recording-info">
-            <div id="recordingStatus">No recording</div>
-            <div id="sizeInfo">0 MB</div>
+        <div class="preview" id="preview">
+
+          <div class="empty-state" id="emptyState">
+
+            <div class="screen-icon">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+
+            <h3>Ready to capture</h3>
+
+            <p>
+              Choose a screen, window, or browser tab,
+              then start recording.
+            </p>
+
           </div>
+
+
+          <video
+            id="previewVideo"
+            autoplay
+            muted
+            playsinline>
+          </video>
+
+
+          <div class="recording-badge" id="recordingBadge">
+            <i></i>
+            REC
+          </div>
+
+        </div>
+
+
+        <!-- PREVIEW FOOTER -->
+        <div class="preview-footer">
+
+          <div class="timer-wrap">
+
+            <span class="mini-label">
+              DURATION
+            </span>
+
+            <strong id="timer">
+              00:00:00
+            </strong>
+
+          </div>
+
+
+          <div class="stats">
+
+            <div>
+              <span>STATUS</span>
+              <b id="recordingStatus">
+                No recording
+              </b>
+            </div>
+
+            <div>
+              <span>SIZE</span>
+              <b id="sizeInfo">
+                0 MB
+              </b>
+            </div>
+
+          </div>
+
         </div>
 
       </section>
 
-      <!-- Settings -->
-      <aside class="card settings">
 
-        <h2>Recording Settings</h2>
+      <!-- SETTINGS -->
+      <aside class="settings-card glass">
 
-        <div class="setting">
+        <div class="section-heading">
 
-          <div class="setting-title">
-            <strong>Microphone</strong>
+          <span class="eyebrow">
+            SETTINGS
+          </span>
 
-            <label class="toggle">
-              <input type="checkbox" id="micToggle">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="setting-desc">
-            Include microphone audio in your recording.
-          </div>
+          <h2>
+            Recording setup
+          </h2>
 
         </div>
 
-        <div class="setting">
 
-          <div class="setting-title">
-            <strong>System Audio</strong>
+        <!-- MICROPHONE -->
+        <div class="setting-row">
 
-            <label class="toggle">
-              <input type="checkbox" id="systemAudioToggle">
-              <span class="slider"></span>
-            </label>
+          <div class="setting-copy">
+
+            <b>
+              Microphone
+            </b>
+
+            <span>
+              Include your microphone
+            </span>
+
           </div>
 
-          <div class="setting-desc">
-            Capture audio from the selected screen or browser tab.
-            Browser support required.
-          </div>
+
+          <label class="switch">
+
+            <input
+              type="checkbox"
+              id="micToggle">
+
+            <span></span>
+
+          </label>
 
         </div>
 
-        <div class="setting">
 
-          <div class="setting-title">
-            <strong>Video Quality</strong>
+        <!-- SYSTEM AUDIO -->
+        <div class="setting-row">
+
+          <div class="setting-copy">
+
+            <b>
+              System audio
+            </b>
+
+            <span>
+              Capture selected tab/screen audio
+            </span>
+
           </div>
+
+
+          <label class="switch">
+
+            <input
+              type="checkbox"
+              id="systemAudioToggle">
+
+            <span></span>
+
+          </label>
+
+        </div>
+
+
+        <!-- QUALITY -->
+        <div class="field">
+
+          <label>
+            Video quality
+          </label>
 
           <select id="quality">
-            <option value="5000000">1080p / High</option>
-            <option value="3000000" selected>720p / Balanced</option>
-            <option value="1500000">480p / Small</option>
+
+            <option value="7000000">
+              1080p · High
+            </option>
+
+            <option
+              value="4000000"
+              selected>
+              720p · Balanced
+            </option>
+
+            <option value="1800000">
+              480p · Small
+            </option>
+
           </select>
 
         </div>
 
-        <div class="setting">
 
-          <div class="setting-title">
-            <strong>Format</strong>
+        <!-- MP4 -->
+        <div class="export-box">
+
+          <div class="export-icon">
+            MP4
           </div>
 
-          <select id="format">
-            <option value="video/webm;codecs=vp9,opus">
-              WebM — VP9 + Opus
-            </option>
+          <div>
 
-            <option value="video/webm;codecs=vp8,opus">
-              WebM — VP8 + Opus
-            </option>
+            <b>
+              MP4 export
+            </b>
 
-            <option value="video/webm">
-              WebM
-            </option>
-          </select>
+            <span>
+              Universal upload format
+            </span>
+
+          </div>
+
+          <div class="check">
+            ✓
+          </div>
 
         </div>
+
+
+        <p class="hint">
+
+          Recording is created locally in your browser.
+          MP4 conversion happens on your device after
+          you stop.
+
+        </p>
 
       </aside>
 
-      <!-- Controls -->
-      <div class="card controls">
+    </section>
 
-        <button class="start" id="startBtn">
-          ● Start Recording
-        </button>
 
-        <button class="pause" id="pauseBtn" disabled>
-          ❚❚ Pause
-        </button>
+    <!-- CONTROLS -->
+    <section class="controls glass">
 
-        <button class="stop" id="stopBtn" disabled>
-          ■ Stop
-        </button>
+      <button
+        class="btn primary"
+        id="startBtn">
 
-        <button class="download" id="downloadBtn" disabled>
-          ↓ Download
-        </button>
+        <span>●</span>
+        Start Recording
 
-        <button class="reset" id="resetBtn">
-          Reset
-        </button>
+      </button>
+
+
+      <button
+        class="btn secondary"
+        id="pauseBtn"
+        disabled>
+
+        <span>Ⅱ</span>
+        Pause
+
+      </button>
+
+
+      <button
+        class="btn danger"
+        id="stopBtn"
+        disabled>
+
+        <span>■</span>
+        Stop
+
+      </button>
+
+
+      <button
+        class="btn success"
+        id="downloadBtn"
+        disabled>
+
+        <span>↓</span>
+        Download MP4
+
+      </button>
+
+
+      <button
+        class="btn ghost"
+        id="resetBtn">
+
+        Reset
+
+      </button>
+
+    </section>
+
+
+    <!-- CONVERSION -->
+    <section
+      class="conversion glass"
+      id="conversionPanel"
+      hidden>
+
+      <div class="conversion-head">
+
+        <div class="spinner"></div>
+
+        <div>
+
+          <b id="conversionTitle">
+            Preparing MP4…
+          </b>
+
+          <span id="conversionText">
+            Loading the local video converter.
+          </span>
+
+        </div>
+
+        <strong id="conversionPercent">
+          0%
+        </strong>
 
       </div>
 
-    </div>
 
+      <div class="progress">
+
+        <span id="progressBar"></span>
+
+      </div>
+
+    </section>
+
+
+    <!-- FOOTER -->
     <footer>
-      Your recording stays in your browser until you download it.
+
+      <span>
+        🔒 Your recordings stay on this device
+        until you download them.
+      </span>
+
+      <span>
+        Chrome / Edge recommended
+      </span>
+
     </footer>
 
+  </main>
+
+
+  <!-- TOAST -->
+  <div
+    class="toast"
+    id="message">
   </div>
 
-  <div class="message" id="message"></div>
 
-  <script>
-    // ============================================
-    // Screen Recorder
-    // Single HTML File
-    // ============================================
-
-    const startBtn = document.getElementById("startBtn");
-    const pauseBtn = document.getElementById("pauseBtn");
-    const stopBtn = document.getElementById("stopBtn");
-    const downloadBtn = document.getElementById("downloadBtn");
-    const resetBtn = document.getElementById("resetBtn");
-
-    const previewVideo = document.getElementById("previewVideo");
-    const emptyState = document.getElementById("emptyState");
-
-    const timerElement = document.getElementById("timer");
-    const sizeInfo = document.getElementById("sizeInfo");
-    const recordingStatus = document.getElementById("recordingStatus");
-
-    const status = document.getElementById("status");
-    const statusText = document.getElementById("statusText");
-
-    const micToggle = document.getElementById("micToggle");
-    const systemAudioToggle = document.getElementById("systemAudioToggle");
-
-    const quality = document.getElementById("quality");
-    const format = document.getElementById("format");
-
-    const message = document.getElementById("message");
-
-    let displayStream = null;
-    let micStream = null;
-    let combinedStream = null;
-    let mediaRecorder = null;
-
-    let recordedChunks = [];
-    let recordedBlob = null;
-
-    let startTime = 0;
-    let pausedTime = 0;
-    let pauseStarted = 0;
-    let timerInterval = null;
-
-    // --------------------------------------------
-    // Utility
-    // --------------------------------------------
-
-    function showMessage(text, type = "") {
-      message.textContent = text;
-      message.className = "message show " + type;
-
-      clearTimeout(showMessage.timeout);
-
-      showMessage.timeout = setTimeout(() => {
-        message.className = "message";
-      }, 3500);
-    }
-
-    function formatTime(seconds) {
-      const hrs = Math.floor(seconds / 3600);
-      const mins = Math.floor((seconds % 3600) / 60);
-      const secs = Math.floor(seconds % 60);
-
-      return [
-        hrs.toString().padStart(2, "0"),
-        mins.toString().padStart(2, "0"),
-        secs.toString().padStart(2, "0")
-      ].join(":");
-    }
-
-    function updateTimer() {
-      if (!startTime) return;
-
-      const now = Date.now();
-
-      let elapsed =
-        now -
-        startTime -
-        pausedTime;
-
-      if (mediaRecorder && mediaRecorder.state === "paused") {
-        elapsed -= now - pauseStarted;
-      }
-
-      elapsed = Math.max(0, elapsed);
-
-      timerElement.textContent =
-        formatTime(Math.floor(elapsed / 1000));
-    }
-
-    function startTimer() {
-      startTime = Date.now();
-      pausedTime = 0;
-      pauseStarted = 0;
-
-      clearInterval(timerInterval);
-      timerInterval = setInterval(updateTimer, 250);
-      updateTimer();
-    }
-
-    function stopTimer() {
-      clearInterval(timerInterval);
-      timerInterval = null;
-    }
-
-    function updateSize() {
-      if (!recordedChunks.length) {
-        sizeInfo.textContent = "0 MB";
-        return;
-      }
-
-      const bytes = recordedChunks.reduce(
-        (total, chunk) => total + chunk.size,
-        0
-      );
-
-      const mb = bytes / (1024 * 1024);
-
-      sizeInfo.textContent =
-        mb < 1
-          ? mb.toFixed(2) + " MB"
-          : mb.toFixed(1) + " MB";
-    }
-
-    // --------------------------------------------
-    // Browser compatibility
-    // --------------------------------------------
-
-    function checkSupport() {
-      if (!navigator.mediaDevices ||
-          !navigator.mediaDevices.getDisplayMedia) {
-
-        showMessage(
-          "Your browser does not support screen recording.",
-          "error"
-        );
-
-        startBtn.disabled = true;
-        return false;
-      }
-
-      if (!window.MediaRecorder) {
-
-        showMessage(
-          "MediaRecorder is not supported in this browser.",
-          "error"
-        );
-
-        startBtn.disabled = true;
-        return false;
-      }
-
-      return true;
-    }
-
-    // --------------------------------------------
-    // Audio helpers
-    // --------------------------------------------
-
-    async function getMicrophone() {
-
-      if (!micToggle.checked) {
-        return null;
-      }
-
-      try {
-
-        return await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true
-          }
-        });
-
-      } catch (error) {
-
-        showMessage(
-          "Microphone permission was denied.",
-          "error"
-        );
-
-        throw error;
-      }
-    }
-
-    // --------------------------------------------
-    // Start Recording
-    // --------------------------------------------
-
-    async function startRecording() {
-
-      if (!checkSupport()) return;
-
-      try {
-
-        startBtn.disabled = true;
-        startBtn.textContent = "Requesting Permission...";
-
-        const wantsSystemAudio =
-          systemAudioToggle.checked;
-
-        displayStream =
-          await navigator.mediaDevices.getDisplayMedia({
-
-            video: {
-              frameRate: {
-                ideal: 30,
-                max: 60
-              }
-            },
-
-            audio: wantsSystemAudio
-
-          });
-
-        // Microphone
-        micStream = await getMicrophone();
-
-        // ----------------------------------------
-        // Build combined stream
-        // ----------------------------------------
-
-        const tracks = [
-          ...displayStream.getVideoTracks()
-        ];
-
-        // System audio
-        if (displayStream.getAudioTracks().length) {
-
-          displayStream
-            .getAudioTracks()
-            .forEach(track => tracks.push(track));
-
-        }
-
-        // Microphone audio
-        if (micStream) {
-
-          micStream
-            .getAudioTracks()
-            .forEach(track => tracks.push(track));
-
-        }
-
-        combinedStream =
-          new MediaStream(tracks);
-
-        // Preview
-        previewVideo.srcObject =
-          combinedStream;
-
-        previewVideo.style.display =
-          "block";
-
-        emptyState.style.display =
-          "none";
-
-        await previewVideo.play();
-
-        // ----------------------------------------
-        // Select supported MIME type
-        // ----------------------------------------
-
-        let selectedFormat =
-          format.value;
-
-        if (!MediaRecorder.isTypeSupported(selectedFormat)) {
-
-          const alternatives = [
-            "video/webm;codecs=vp8,opus",
-            "video/webm",
-            "video/webm;codecs=vp9"
-          ];
-
-          selectedFormat =
-            alternatives.find(type =>
-              MediaRecorder.isTypeSupported(type)
-            ) || "";
-        }
-
-        // ----------------------------------------
-        // Media Recorder
-        // ----------------------------------------
-
-        const bitrate =
-          Number(quality.value);
-
-        const options = {};
-
-        if (selectedFormat) {
-          options.mimeType = selectedFormat;
-        }
-
-        options.videoBitsPerSecond =
-          bitrate;
-
-        mediaRecorder =
-          new MediaRecorder(
-            combinedStream,
-            options
-          );
-
-        recordedChunks = [];
-        recordedBlob = null;
-
-        mediaRecorder.ondataavailable =
-          event => {
-
-            if (event.data &&
-                event.data.size > 0) {
-
-              recordedChunks.push(
-                event.data
-              );
-
-              updateSize();
-            }
-
-          };
-
-        mediaRecorder.onstop =
-          finishRecording;
-
-        mediaRecorder.onerror =
-          event => {
-
-            console.error(
-              "MediaRecorder error:",
-              event.error
-            );
-
-            showMessage(
-              "Recording error occurred.",
-              "error"
-            );
-
-          };
-
-        // ----------------------------------------
-        // Detect user clicking browser Stop Share
-        // ----------------------------------------
-
-        const videoTrack =
-          displayStream.getVideoTracks()[0];
-
-        if (videoTrack) {
-
-          videoTrack.onended = () => {
-
-            if (
-              mediaRecorder &&
-              mediaRecorder.state !== "inactive"
-            ) {
-              stopRecording();
-            }
-
-          };
-
-        }
-
-        mediaRecorder.start(1000);
-
-        startTimer();
-
-        status.classList.add("recording");
-        statusText.textContent = "Recording";
-
-        recordingStatus.textContent =
-          "Recording in progress";
-
-        pauseBtn.disabled = false;
-        stopBtn.disabled = false;
-        downloadBtn.disabled = true;
-
-        startBtn.textContent =
-          "● Recording";
-
-        showMessage(
-          "Recording started.",
-          "success"
-        );
-
-      } catch (error) {
-
-        console.error(error);
-
-        cleanupStreams();
-
-        startBtn.disabled = false;
-        startBtn.textContent =
-          "● Start Recording";
-
-        pauseBtn.disabled = true;
-        stopBtn.disabled = true;
-
-        if (
-          error.name !== "NotAllowedError" &&
-          error.name !== "AbortError"
-        ) {
-
-          showMessage(
-            "Could not start recording.",
-            "error"
-          );
-
-        } else {
-
-          showMessage(
-            "Screen selection was cancelled.",
-            "error"
-          );
-
-        }
-
-      }
-
-    }
-
-    // --------------------------------------------
-    // Pause / Resume
-    // --------------------------------------------
-
-    function togglePause() {
-
-      if (!mediaRecorder) return;
-
-      if (mediaRecorder.state === "recording") {
-
-        mediaRecorder.pause();
-
-        pauseStarted = Date.now();
-
-        pauseBtn.textContent =
-          "▶ Resume";
-
-        recordingStatus.textContent =
-          "Recording paused";
-
-        statusText.textContent =
-          "Paused";
-
-      } else if (
-        mediaRecorder.state === "paused"
-      ) {
-
-        pausedTime +=
-          Date.now() - pauseStarted;
-
-        pauseStarted = 0;
-
-        mediaRecorder.resume();
-
-        pauseBtn.textContent =
-          "❚❚ Pause";
-
-        recordingStatus.textContent =
-          "Recording in progress";
-
-        statusText.textContent =
-          "Recording";
-      }
-
-    }
-
-    // --------------------------------------------
-    // Stop
-    // --------------------------------------------
-
-    function stopRecording() {
-
-      if (!mediaRecorder) return;
-
-      if (
-        mediaRecorder.state === "recording" ||
-        mediaRecorder.state === "paused"
-      ) {
-
-        mediaRecorder.stop();
-
-      }
-
-      stopTimer();
-
-      pauseBtn.disabled = true;
-      stopBtn.disabled = true;
-
-      recordingStatus.textContent =
-        "Processing recording...";
-
-    }
-
-    // --------------------------------------------
-    // Recording finished
-    // --------------------------------------------
-
-    function finishRecording() {
-
-      recordedBlob =
-        new Blob(
-          recordedChunks,
-          {
-            type:
-              mediaRecorder.mimeType ||
-              "video/webm"
-          }
-        );
-
-      updateSize();
-
-      cleanupStreams();
-
-      previewVideo.srcObject = null;
-
-      if (recordedBlob) {
-
-        previewVideo.src =
-          URL.createObjectURL(
-            recordedBlob
-          );
-
-        previewVideo.controls = true;
-        previewVideo.muted = false;
-
-        previewVideo.style.display =
-          "block";
-
-        emptyState.style.display =
-          "none";
-
-      }
-
-      status.classList.remove(
-        "recording"
-      );
-
-      statusText.textContent =
-        "Ready";
-
-      recordingStatus.textContent =
-        "Recording ready";
-
-      startBtn.disabled = false;
-      startBtn.textContent =
-        "● Start Recording";
-
-      downloadBtn.disabled =
-        !recordedBlob;
-
-      timerElement.textContent =
-        timerElement.textContent;
-
-      showMessage(
-        "Recording completed.",
-        "success"
-      );
-
-    }
-
-    // --------------------------------------------
-    // Cleanup
-    // --------------------------------------------
-
-    function cleanupStreams() {
-
-      if (displayStream) {
-
-        displayStream
-          .getTracks()
-          .forEach(track =>
-            track.stop()
-          );
-
-      }
-
-      if (micStream) {
-
-        micStream
-          .getTracks()
-          .forEach(track =>
-            track.stop()
-          );
-
-      }
-
-      displayStream = null;
-      micStream = null;
-      combinedStream = null;
-
-    }
-
-    // --------------------------------------------
-    // Download
-    // --------------------------------------------
-
-    function downloadRecording() {
-
-      if (!recordedBlob) {
-
-        showMessage(
-          "No recording available.",
-          "error"
-        );
-
-        return;
-      }
-
-      const url =
-        URL.createObjectURL(
-          recordedBlob
-        );
-
-      const now =
-        new Date();
-
-      const date =
-        now.toISOString()
-          .replace(/[:.]/g, "-")
-          .slice(0, 19);
-
-      const filename =
-        `screen-recording-${date}.webm`;
-
-      const a =
-        document.createElement("a");
-
-      a.href = url;
-      a.download = filename;
-
-      document.body.appendChild(a);
-
-      a.click();
-
-      a.remove();
-
-      setTimeout(() => {
-        URL.revokeObjectURL(url);
-      }, 1000);
-
-      showMessage(
-        "Recording downloaded.",
-        "success"
-      );
-
-    }
-
-    // --------------------------------------------
-    // Reset
-    // --------------------------------------------
-
-    function resetRecorder() {
-
-      if (
-        mediaRecorder &&
-        mediaRecorder.state !== "inactive"
-      ) {
-
-        mediaRecorder.stop();
-
-      }
-
-      cleanupStreams();
-      stopTimer();
-
-      recordedChunks = [];
-      recordedBlob = null;
-
-      if (previewVideo.src) {
-
-        URL.revokeObjectURL(
-          previewVideo.src
-        );
-
-      }
-
-      previewVideo.src = "";
-      previewVideo.srcObject = null;
-      previewVideo.controls = false;
-      previewVideo.muted = true;
-
-      previewVideo.style.display =
-        "none";
-
-      emptyState.style.display =
-        "block";
-
-      timerElement.textContent =
-        "00:00:00";
-
-      sizeInfo.textContent =
-        "0 MB";
-
-      recordingStatus.textContent =
-        "No recording";
-
-      status.classList.remove(
-        "recording"
-      );
-
-      statusText.textContent =
-        "Ready";
-
-      startBtn.disabled = false;
-      pauseBtn.disabled = true;
-      stopBtn.disabled = true;
-      downloadBtn.disabled = true;
-
-      startBtn.textContent =
-        "● Start Recording";
-
-      pauseBtn.textContent =
-        "❚❚ Pause";
-
-      mediaRecorder = null;
-
-      showMessage(
-        "Recorder reset."
-      );
-
-    }
-
-    // --------------------------------------------
-    // Events
-    // --------------------------------------------
-
-    startBtn.addEventListener(
-      "click",
-      startRecording
-    );
-
-    pauseBtn.addEventListener(
-      "click",
-      togglePause
-    );
-
-    stopBtn.addEventListener(
-      "click",
-      stopRecording
-    );
-
-    downloadBtn.addEventListener(
-      "click",
-      downloadRecording
-    );
-
-    resetBtn.addEventListener(
-      "click",
-      resetRecorder
-    );
-
-    // Prevent changing recording settings
-    // while recording.
-
-    function lockSettings(lock) {
-
-      micToggle.disabled = lock;
-      systemAudioToggle.disabled = lock;
-      quality.disabled = lock;
-      format.disabled = lock;
-
-    }
-
-    startBtn.addEventListener(
-      "click",
-      () => lockSettings(true)
-    );
-
-    mediaRecorder;
-
-    // Unlock after recording finishes
-    const originalFinish =
-      finishRecording;
-
-    // Browser support check
-    checkSupport();
-
+  <script
+    type="module"
+    src="app.js">
   </script>
 
 </body>
